@@ -1,0 +1,143 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, CheckCircle } from "lucide-react";
+
+export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSent, setIsSent] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("https://app.chaosmind.dev/api/v1/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Request failed");
+      }
+
+      setIsSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <Card className="w-full max-w-md bg-white border-gray-200 shadow-lg">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-4">
+              <CheckCircle className="h-12 w-12 text-green-500" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-gray-900">Check your email</CardTitle>
+            <CardDescription className="text-gray-500">
+              We've sent a password reset link to{" "}
+              <span className="text-gray-700 font-medium">{email}</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-sm text-gray-500 mb-4">
+              Click the link in the email to reset your password. If you don't see it, check your spam folder.
+            </p>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <Button
+              variant="outline"
+              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
+              onClick={() => setIsSent(false)}
+            >
+              Didn't receive it? Try again
+            </Button>
+            <div className="text-sm text-gray-500">
+              <Link href="/login" className="text-violet-600 hover:text-violet-700 font-medium">
+                Back to sign in
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <Card className="w-full max-w-md bg-white border-gray-200 shadow-lg">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="w-10 h-10 bg-violet-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xl">C</span>
+            </div>
+          </div>
+          <CardTitle className="text-2xl font-bold text-gray-900">Forgot password?</CardTitle>
+          <CardDescription className="text-gray-500">
+            Enter your email and we'll send you a reset link
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                {error}
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-700">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-violet-500 focus:ring-violet-500"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-violet-600 text-white hover:bg-violet-700"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send reset link"
+              )}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-sm text-gray-500 text-center">
+            Remember your password?{" "}
+            <Link href="/login" className="text-violet-600 hover:text-violet-700 font-medium">
+              Sign in
+            </Link>
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
